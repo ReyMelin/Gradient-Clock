@@ -377,7 +377,7 @@
                 } else if (textureType === 'numbers') {
                     marker.textContent = i === 0 ? 12 : i;
                 } else if (textureType === 'cardinal') {
-                    marker.textContent = i === 0 ? 12 : i * 3;
+                    marker.textContent = i === 0 ? 12 : (i === 3 ? 3 : (i === 6 ? 6 : 9));
                 }
 
                 marker.style.left = `50%`;

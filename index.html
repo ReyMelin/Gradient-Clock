@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cool Color Clock</title>
     <style>
+        :root {
+            --clock-size: min(90vw, 90vh, 600px);
+            --seconds-size: var(--clock-size);
+            --minutes-size: calc(var(--clock-size) * 0.833);
+            --hours-size: calc(var(--clock-size) * 0.583);
+            --marker-radius: calc(var(--clock-size) * 0.467);
+            --font-size: calc(var(--clock-size) * 0.08);
+            --marker-font-size: calc(var(--clock-size) * 0.04);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,12 +28,13 @@
             min-height: 100vh;
             background: #0a0a0a;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 20px;
         }
 
         .clock-container {
             position: relative;
-            width: 600px;
-            height: 600px;
+            width: var(--clock-size);
+            height: var(--clock-size);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -41,28 +52,28 @@
 
         /* Seconds ring - outer (thin) */
         .seconds-ring {
-            width: 600px;
-            height: 600px;
+            width: var(--seconds-size);
+            height: var(--seconds-size);
         }
 
         /* Minutes ring - middle */
         .minutes-ring {
-            width: 500px;
-            height: 500px;
+            width: var(--minutes-size);
+            height: var(--minutes-size);
         }
 
         /* Hours ring - inner */
         .hours-ring {
-            width: 350px;
-            height: 350px;
+            width: var(--hours-size);
+            height: var(--hours-size);
         }
 
         .time-display {
             position: absolute;
-            font-size: 48px;
+            font-size: var(--font-size);
             font-weight: 300;
             color: rgba(255, 255, 255, 0.9);
-            letter-spacing: 4px;
+            letter-spacing: 0.05em;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
             display: none;
         }
@@ -73,9 +84,13 @@
 
         .button-container {
             position: absolute;
-            top: 50px;
+            top: 20px;
             display: flex;
-            gap: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90vw;
+            padding: 0 10px;
         }
 
         .time-button {
@@ -131,15 +146,15 @@
         .clock-marker {
             position: absolute;
             color: rgba(255, 255, 255, 0.6);
-            font-size: 24px;
+            font-size: var(--marker-font-size);
             font-weight: 300;
             transform: translate(-50%, -50%);
             pointer-events: none;
         }
 
         .clock-marker.dot {
-            width: 8px;
-            height: 8px;
+            width: calc(var(--clock-size) * 0.013);
+            height: calc(var(--clock-size) * 0.013);
             background: rgba(255, 255, 255, 0.6);
             border-radius: 50%;
             font-size: 0;
@@ -147,11 +162,79 @@
 
         .info {
             position: absolute;
-            bottom: 50px;
+            bottom: 20px;
             text-align: center;
             color: rgba(255, 255, 255, 0.3);
             font-size: 14px;
             width: 100%;
+            padding: 0 20px;
+        }
+
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            :root {
+                --clock-size: min(85vw, 85vh, 500px);
+            }
+
+            .button-container {
+                top: 10px;
+                gap: 8px;
+            }
+
+            .time-button,
+            .texture-select {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+
+            .info {
+                font-size: 12px;
+                bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            :root {
+                --clock-size: min(80vw, 80vh, 400px);
+            }
+
+            .button-container {
+                top: 5px;
+                gap: 6px;
+            }
+
+            .time-button,
+            .texture-select {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+
+            .info {
+                font-size: 10px;
+                bottom: 5px;
+            }
+        }
+
+        @media (max-height: 600px) and (orientation: landscape) {
+            :root {
+                --clock-size: min(70vh, 400px);
+            }
+
+            .button-container {
+                top: 5px;
+                gap: 5px;
+            }
+
+            .time-button,
+            .texture-select {
+                padding: 6px 10px;
+                font-size: 10px;
+            }
+
+            .info {
+                font-size: 9px;
+                bottom: 5px;
+            }
         }
     </style>
 </head>
@@ -268,7 +351,9 @@
             if (textureType === 'none') return;
 
             const container = document.querySelector('.clock-container');
-            const radius = 280; // Distance from center
+            // Get the actual clock size from the container and calculate radius (46.7% of clock size)
+            const clockSize = container.offsetWidth;
+            const radius = clockSize * 0.467; // Distance from center (responsive)
 
             let positions = [];
             if (textureType === 'cardinal') {
@@ -385,6 +470,18 @@
         document.getElementById('themeSelect').addEventListener('change', function() {
             currentTheme = this.value;
             updateClock();
+        });
+
+        // Handle window resize - reposition markers
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const currentTexture = document.getElementById('textureSelect').value;
+                if (currentTexture !== 'none') {
+                    renderTexture(currentTexture);
+                }
+            }, 100);
         });
     </script>
 </body>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">HOURue - Clock Face</string>
-    <string name="title_activity_main">HOURue - Clock Face</string>
-    <string name="package_name">com.reymelin.HOURue</string>
-    <string name="custom_url_scheme">com.reymelin.HOURue</string>
+    <string name="app_name">Gradient Clock</string>
+    <string name="title_activity_main">Gradient Clock</string>
+    <string name="package_name">com.reymelin.gradientclock</string>
+    <string name="custom_url_scheme">com.reymelin.gradientclock</string>
 </resources>

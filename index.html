@@ -268,7 +268,7 @@
         <div class="time-display">00:00:00</div>
     </div>
     <div class="info">
-        Cool Color Clock - Time expressed through color
+        Gradiant Clock - Time expressed through color
         <br>
         <a href="privacy.html" style="color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 12px; margin-top: 8px; display: inline-block;">Privacy Policy</a>
     </div>
@@ -393,6 +393,7 @@
             const seconds = now.getSeconds();
             const minutes = now.getMinutes();
             const hours = now.getHours() % 12;
+            const milliseconds = now.getMilliseconds();
 
             // Update digital time display
             const timeDisplay = document.querySelector('.time-display');
@@ -412,10 +413,15 @@
                 timeDisplay.classList.remove('show');
             }
 
-            // Calculate angles (0deg is top, clockwise)
-            const secondsAngle = (seconds / 60) * 360;
-            const minutesAngle = (minutes / 60) * 360;
-            const hoursAngle = (hours / 12) * 360;
+            // Calculate angles with smooth progression (0deg is top, clockwise)
+            // Seconds: includes milliseconds for smooth ticking every frame
+            const secondsAngle = ((seconds + milliseconds / 1000) / 60) * 360;
+            
+            // Minutes: includes seconds for smooth progression within the minute
+            const minutesAngle = ((minutes + seconds / 60) / 60) * 360;
+            
+            // Hours: includes minutes and seconds for smooth progression within the hour
+            const hoursAngle = ((hours + minutes / 60 + seconds / 3600) / 12) * 360;
 
             // Apply themed gradients
             const theme = themes[currentTheme];

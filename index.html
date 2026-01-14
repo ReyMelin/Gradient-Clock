@@ -259,6 +259,8 @@
             <option value="halloween">Halloween</option>
             <option value="flowerpower">Flower Power</option>
             <option value="rgb">RGB</option>
+            <option value="radar">Radar</option>
+            <option value="fill">Fill</option>
         </select>
     </div>
     <div class="clock-container">
@@ -323,6 +325,18 @@
                 seconds: [0, 100, 60, 50, 40, 30, 20, 12, 20, 30, 40, 50, 60],   // Red
                 minutes: [120, 100, 60, 50, 40, 30, 20, 12, 20, 30, 40, 50, 60], // Green
                 hours: [240, 100, 60, 50, 40, 30, 20, 12, 20, 30, 40, 50, 60]    // Blue
+            },
+            radar: {
+                // Radar uses different logic - these colors are for the sweep
+                seconds: [120, 100, 50],  // Green for seconds sweep
+                minutes: [180, 100, 50],  // Cyan for minutes sweep
+                hours: [200, 100, 50]     // Light blue for hours sweep
+            },
+            fill: {
+                // Fill uses different logic - two colors per ring [startColor, fillColor]
+                seconds: [[0, 100, 30], [240, 100, 30]],      // Red fills with blue
+                minutes: [[120, 100, 28], [60, 100, 32]],     // Green fills with yellow
+                hours: [[0, 100, 30], [240, 100, 30]]         // Red fills with blue
             }
         };
 
@@ -341,6 +355,41 @@
                 hsl(${hue}, ${sat + 5}%, ${lightness[2]}%) 345deg,
                 hsl(${hue}, ${sat + 3}%, ${lightness[1]}%) 355deg,
                 hsl(${hue}, ${sat}%, ${lightness[0]}%) 360deg
+            )`;
+        }
+
+        function generateRadar(angle, colorData) {
+            const [hue, sat, lightness] = colorData;
+            const darkBg = `transparent`;
+            
+            // Create radar sweep with bright point at current position and extended trail BEHIND it
+            return `conic-gradient(
+                from ${angle}deg,
+                hsl(${hue}, ${sat}%, ${lightness}%) 0deg,
+                ${darkBg} 2deg,
+                ${darkBg} 300deg,
+                hsl(${hue}, ${sat - 30}%, ${lightness * 0.08}%) 315deg,
+                hsl(${hue}, ${sat - 20}%, ${lightness * 0.15}%) 330deg,
+                hsl(${hue}, ${sat}%, ${lightness * 0.25}%) 340deg,
+                hsl(${hue}, ${sat}%, ${lightness * 0.4}%) 350deg,
+                hsl(${hue}, ${sat}%, ${lightness * 0.6}%) 355deg,
+                hsl(${hue}, ${sat}%, ${lightness * 0.8}%) 358deg,
+                hsl(${hue}, ${sat}%, ${lightness}%) 360deg
+            )`;
+        }
+
+        function generateFill(angle, colorData) {
+            const [startColor, fillColor] = colorData;
+            const [startHue, startSat, startLight] = startColor;
+            const [fillHue, fillSat, fillLight] = fillColor;
+            
+            // Create fill effect: fillColor grows from 0deg, startColor is the remainder
+            return `conic-gradient(
+                from 0deg,
+                hsl(${fillHue}, ${fillSat}%, ${fillLight}%) 0deg,
+                hsl(${fillHue}, ${fillSat}%, ${fillLight}%) ${angle}deg,
+                hsl(${startHue}, ${startSat}%, ${startLight}%) ${angle}deg,
+                hsl(${startHue}, ${startSat}%, ${startLight}%) 360deg
             )`;
         }
 
@@ -423,15 +472,28 @@
             // Hours: includes minutes and seconds for smooth progression within the hour
             const hoursAngle = ((hours + minutes / 60 + seconds / 3600) / 12) * 360;
 
-            // Apply themed gradients
+            // Apply themed gradients, radar, or fill
             const theme = themes[currentTheme];
             const secondsRing = document.querySelector('.seconds-ring');
             const minutesRing = document.querySelector('.minutes-ring');
             const hoursRing = document.querySelector('.hours-ring');
 
-            secondsRing.style.background = generateGradient(secondsAngle, theme.seconds);
-            minutesRing.style.background = generateGradient(minutesAngle, theme.minutes);
-            hoursRing.style.background = generateGradient(hoursAngle, theme.hours);
+            if (currentTheme === 'radar') {
+                // Use radar sweep effect
+                secondsRing.style.background = generateRadar(secondsAngle, theme.seconds);
+                minutesRing.style.background = generateRadar(minutesAngle, theme.minutes);
+                hoursRing.style.background = generateRadar(hoursAngle, theme.hours);
+            } else if (currentTheme === 'fill') {
+                // Use fill effect
+                secondsRing.style.background = generateFill(secondsAngle, theme.seconds);
+                minutesRing.style.background = generateFill(minutesAngle, theme.minutes);
+                hoursRing.style.background = generateFill(hoursAngle, theme.hours);
+            } else {
+                // Use normal gradient effect
+                secondsRing.style.background = generateGradient(secondsAngle, theme.seconds);
+                minutesRing.style.background = generateGradient(minutesAngle, theme.minutes);
+                hoursRing.style.background = generateGradient(hoursAngle, theme.hours);
+            }
         }
 
         // Update clock immediately and then every 100ms for smooth animation

@@ -334,7 +334,7 @@
             },
             fill: {
                 // Fill uses different logic - two colors per ring [startColor, fillColor]
-                seconds: [[0, 100, 30], [240, 100, 30]],      // Red fills with blue
+                seconds: [[0, 100, 30], [240, 100, 30]],      // Red and blue (alternates every minute)
                 minutes: [[120, 100, 28], [60, 100, 32]],     // Green fills with yellow
                 hours: [[0, 100, 30], [240, 100, 30]]         // Red fills with blue
             }
@@ -378,18 +378,38 @@
             )`;
         }
 
-        function generateFill(angle, colorData) {
+        function generateFill(angle, colorData, isSecondMinute = false) {
             const [startColor, fillColor] = colorData;
             const [startHue, startSat, startLight] = startColor;
             const [fillHue, fillSat, fillLight] = fillColor;
             
-            // Create fill effect: fillColor grows from 0deg, startColor is the remainder
+            // For seconds ring, alternate colors based on which minute we're in
+            let baseHue, baseSat, baseLight, growHue, growSat, growLight;
+            if (isSecondMinute) {
+                // Second minute: blue fills in red
+                baseHue = fillHue;
+                baseSat = fillSat;
+                baseLight = fillLight;
+                growHue = startHue;
+                growSat = startSat;
+                growLight = startLight;
+            } else {
+                // First minute: red fills in blue
+                baseHue = startHue;
+                baseSat = startSat;
+                baseLight = startLight;
+                growHue = fillHue;
+                growSat = fillSat;
+                growLight = fillLight;
+            }
+            
+            // Create fill effect: growColor grows from 0deg, baseColor is the remainder
             return `conic-gradient(
                 from 0deg,
-                hsl(${fillHue}, ${fillSat}%, ${fillLight}%) 0deg,
-                hsl(${fillHue}, ${fillSat}%, ${fillLight}%) ${angle}deg,
-                hsl(${startHue}, ${startSat}%, ${startLight}%) ${angle}deg,
-                hsl(${startHue}, ${startSat}%, ${startLight}%) 360deg
+                hsl(${growHue}, ${growSat}%, ${growLight}%) 0deg,
+                hsl(${growHue}, ${growSat}%, ${growLight}%) ${angle}deg,
+                hsl(${baseHue}, ${baseSat}%, ${baseLight}%) ${angle}deg,
+                hsl(${baseHue}, ${baseSat}%, ${baseLight}%) 360deg
             )`;
         }
 
@@ -484,10 +504,17 @@
                 minutesRing.style.background = generateRadar(minutesAngle, theme.minutes);
                 hoursRing.style.background = generateRadar(hoursAngle, theme.hours);
             } else if (currentTheme === 'fill') {
-                // Use fill effect
-                secondsRing.style.background = generateFill(secondsAngle, theme.seconds);
-                minutesRing.style.background = generateFill(minutesAngle, theme.minutes);
-                hoursRing.style.background = generateFill(hoursAngle, theme.hours);
+                // Use fill effect with 2-lap cycles
+                // Seconds: 2-minute cycle (alternates each minute based on odd/even minute)
+                const isSecondMinute = minutes % 2 === 1;
+                // Minutes: 2-hour cycle (alternates each hour)
+                const isSecondHour = now.getHours() % 2 === 1;
+                // Hours: 2 x 12-hour cycle (alternates every 12 hours)
+                const isSecondHalfDay = now.getHours() >= 12;
+                
+                secondsRing.style.background = generateFill(secondsAngle, theme.seconds, isSecondMinute);
+                minutesRing.style.background = generateFill(minutesAngle, theme.minutes, isSecondHour);
+                hoursRing.style.background = generateFill(hoursAngle, theme.hours, isSecondHalfDay);
             } else {
                 // Use normal gradient effect
                 secondsRing.style.background = generateGradient(secondsAngle, theme.seconds);
